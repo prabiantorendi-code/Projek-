@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6C3FC4;
+            --primary-hover: #56329e;
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --error-color: #dc3545;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f8f9fa 100%);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Login Card */
+        .login-wrapper {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Password Toggle */
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            padding: 0;
+            font-family: inherit;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-color);
+        }
+
+        /* Submit Button */
+        .btn-login {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-family: inherit;
+            position: relative;
+        }
+
+        .btn-login:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-login:disabled {
+            background: #a38cd1;
+            cursor: not-allowed;
+        }
+
+        /* Error Message */
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 15px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .btn-text.hidden {
+            visibility: hidden;
+        }
+
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Global Loading State (saat cek session) */
+        #globalLoading {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-color);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .global-spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #ddd;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin-normal 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin-normal {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="globalLoading">
+        <div class="global-spinner"></div>
+        <p style="color: #666; font-weight: 500;">Memeriksa sesi keamanan...</p>
+    </div>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Admin Panel</h1>
+                <p>Silakan masuk untuk mengelola sistem</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="Masukkan email admin" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Masukkan password" required>
+                    <button type="button" class="password-toggle" id="togglePassword">Show</button>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span class="btn-text" id="btnText">Login</span>
+                    <div class="spinner" id="loginSpinner"></div>
+                </button>
+
+                <div class="error-message" id="errorMessage"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/firebase-config.js"></script>
+    
+    <script type="module">
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+
+        // Inisialisasi Auth
+        const auth = getAuth();
+
+        // Referensi UI
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = document.getElementById('btnText');
+        const loginSpinner = document.getElementById('loginSpinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const globalLoading = document.getElementById('globalLoading');
+
+        // 1. Cek Sesi Aktif (Apakah admin sudah login?)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Jika sudah login, langsung tendang ke dashboard (karena sama-sama di folder admin)
+                window.location.href = 'dashboard.html';
+            } else {
+                // Jika belum login, sembunyikan loading layar penuh dan biarkan form login muncul
+                globalLoading.style.display = 'none';
+            }
+        });
+
+        // 2. Fitur Tampilkan/Sembunyikan Password
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            togglePassword.textContent = type === 'password' ? 'Show' : 'Hide';
+        });
+
+        // 3. Proses Submit Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Mencegah halaman refresh
+            
+            // Ambil data
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            // Reset pesan error
+            errorMessage.textContent = '';
+
+            // Tampilkan state loading di tombol
+            loginBtn.disabled = true;
+            btnText.classList.add('hidden');
+            loginSpinner.style.display = 'block';
+
+            try {
+                // Eksekusi Login Firebase
+                await signInWithEmailAndPassword(auth, email, password);
+                // Jika berhasil, onAuthStateChanged di atas akan otomatis berjalan dan me-redirect ke dashboard
+                
+            } catch (error) {
+                console.error("Login Error:", error.code);
+                
+                // Terjemahkan kode error Firebase agar mudah dipahami user
+                switch(error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage.textContent = 'Format email tidak valid.';
+                        break;
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                    case 'auth/invalid-credential':
+                        errorMessage.textContent = 'Email atau password salah.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage.textContent = 'Terlalu banyak percobaan. Coba lagi nanti.';
+                        break;
+                    default:
+                        errorMessage.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                }
+                
+                // Kembalikan tombol ke state semula karena gagal
+                loginBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                loginSpinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
