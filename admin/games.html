@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Games - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6C3FC4;
+            --primary-hover: #56329e;
+            --bg-color: #f4f6f9;
+            --sidebar-bg: #2c3e50;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --danger-color: #dc3545;
+            --danger-hover: #c82333;
+            --info-color: #0d6efd;
+            --info-hover: #0b5ed7;
+            --border-color: #dee2e6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen Pengecekan Akses */
+        #authLoading {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: white; z-index: 9999;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #eee; border-top-color: var(--primary-color);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Sidebar Navigation (Sama dengan Dashboard) */
+        .sidebar {
+            width: 260px; background: var(--sidebar-bg); color: white;
+            display: flex; flex-direction: column; transition: transform 0.3s ease;
+            position: fixed; height: 100vh; z-index: 1000;
+        }
+        .sidebar-header { padding: 20px; text-align: center; font-size: 1.5rem; font-weight: 700; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-menu { list-style: none; flex-grow: 1; padding-top: 20px; overflow-y: auto; }
+        .sidebar-menu li a { display: block; padding: 15px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; font-weight: 500; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: var(--primary-color); color: white; border-left: 4px solid white; }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1; margin-left: 260px; display: flex; flex-direction: column;
+            min-height: 100vh; transition: margin-left 0.3s ease; width: calc(100% - 260px);
+        }
+
+        /* Header */
+        .header {
+            background: var(--card-bg); padding: 15px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 900;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .menu-toggle { display: none; font-size: 1.5rem; background: none; border: none; cursor: pointer; color: var(--text-color); }
+        .header-title { font-size: 1.2rem; font-weight: 600; }
+        
+        .btn {
+            padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500; transition: 0.3s; color: white;
+        }
+        .btn-primary { background: var(--primary-color); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-info { background: var(--info-color); font-size: 0.85rem; padding: 6px 12px;}
+        .btn-info:hover { background: var(--info-hover); }
+        .btn-danger { background: var(--danger-color); font-size: 0.85rem; padding: 6px 12px;}
+        .btn-danger:hover { background: var(--danger-hover); }
+
+        /* Content Body & Table */
+        .content-body { padding: 30px; flex-grow: 1; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card-header h2 { font-size: 1.2rem; }
+        
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: #f8f9fa; font-weight: 600; color: #555; }
+        tbody tr:hover { background-color: #f8f9fa; }
+        .td-image img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+        .action-buttons { display: flex; gap: 8px; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal {
+            background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; }
+        .modal-body { padding: 20px; }
+        
+        /* Form Inputs */
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
+        .form-control {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px;
+            font-family: inherit; transition: 0.3s;
+        }
+        .form-control:focus { outline: none; border-color: var(--primary-color); }
+        #imagePreview {
+            display: none; width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; border-radius: 8px; border: 1px dashed var(--border-color);
+        }
+
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); text-align: right; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+
+        /* Mobile Sidebar Overlay */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+
+        /* Responsive Mobile */
+        @media (max-width: 991px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; }
+            .menu-toggle { display: block; }
+            .sidebar-overlay.show { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authLoading">
+        <div class="spinner"></div>
+        <p style="color: #666; font-weight: 500;">Memeriksa akses...</p>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">Admin Panel</div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="games.html" class="active">Kelola Games</a></li>
+            <li><a href="products.html">Kelola Produk</a></li>
+            <li><a href="settings.html">Konfigurasi Website</a></li>
+            <li><a href="whatsapp.html">Konfigurasi WhatsApp</a></li>
+            <li><a href="payment-image.html">Gambar Pembayaran</a></li>
+            <li><a href="contact-edit.html">Edit Kontak</a></li>
+            <li><a href="manage-admin.html">Kelola Admin</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">&#9776;</button>
+                <div class="header-title">Kelola Games</div>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Daftar Game</h2>
+                    <button class="btn btn-primary" onclick="openModal()">+ Tambah Game</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="gamesTable">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Gambar</th>
+                                <th>Nama Game</th>
+                                <th>Kategori</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gamesTableBody">
+                            <tr><td colspan="5" style="text-align:center;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="gameModal">
+        <div class="modal">
+            <form id="gameForm">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Tambah Game</h3>
+                    <button type="button" class="close-modal" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="gameId"> <input type="hidden" id="existingImageUrl"> <div class="form-group">
+                        <label class="form-label" for="gameName">Nama Game</label>
+                        <input type="text" id="gameName" class="form-control" required placeholder="Contoh: Mobile Legends">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="gameCategory">Kategori</label>
+                        <input type="text" id="gameCategory" class="form-control" required placeholder="Contoh: MOBA">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="gameImage">Gambar Game</label>
+                        <input type="file" id="gameImage" class="form-control" accept="image/*">
+                        <small style="color:#666; font-size:0.8rem;">*Biarkan kosong jika tidak ingin mengubah gambar (saat edit)</small>
+                        <img id="imagePreview" alt="Preview">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btnSave">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/firebase-config.js"></script>
+    
+    <script type="module">
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
+
+        const auth = getAuth();
+        const db = getFirestore();
+        const storage = getStorage();
+
+        // UI Referensi
+        const tableBody = document.getElementById('gamesTableBody');
+        const modal = document.getElementById('gameModal');
+        const gameForm = document.getElementById('gameForm');
+        const imageInput = document.getElementById('gameImage');
+        const imagePreview = document.getElementById('imagePreview');
+        const btnSave = document.getElementById('btnSave');
+
+        let gamesData = []; // Array global untuk nyimpan data realtime
+
+        // ==========================================
+        // 1. PROTEKSI HALAMAN (AUTH) & UI MOBILE
+        // ==========================================
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('authLoading').style.display = 'none';
+                loadGames(); // Jalankan load data
+            } else {
+                window.location.replace('login.html');
+            }
+        });
+
+        // Sidebar logic
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            sidebar.classList.add('show'); sidebarOverlay.classList.add('show');
+        });
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('show'); sidebarOverlay.classList.remove('show');
+        });
+
+        // ==========================================
+        // 2. READ: Ambil Data Realtime
+        // ==========================================
+        function loadGames() {
+            onSnapshot(collection(db, "games"), (snapshot) => {
+                gamesData = [];
+                tableBody.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada game.</td></tr>';
+                    return;
+                }
+
+                let no = 1;
+                snapshot.forEach((doc) => {
+                    const game = { id: doc.id, ...doc.data() };
+                    gamesData.push(game);
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${no++}</td>
+                        <td class="td-image"><img src="${game.imageUrl}" alt="${game.name}"></td>
+                        <td>${game.name}</td>
+                        <td>${game.category}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-info" onclick="editGame('${game.id}')">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteGame('${game.id}')">Hapus</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }, (error) => {
+                console.error("Error mengambil data game: ", error);
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Gagal memuat data!</td></tr>';
+            });
+        }
+
+        // ==========================================
+        // 3. CREATE & UPDATE (Simpan Data)
+        // ==========================================
+        gameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            btnSave.disabled = true;
+            btnSave.innerText = 'Menyimpan...';
+
+            const id = document.getElementById('gameId').value;
+            const name = document.getElementById('gameName').value;
+            const category = document.getElementById('gameCategory').value;
+            const file = imageInput.files[0];
+            let imageUrl = document.getElementById('existingImageUrl').value;
+
+            try {
+                // Jika user upload file baru, kita kirim ke Storage dulu
+                if (file) {
+                    // Buat nama file unik
+                    const fileName = `game_${Date.now()}_${file.name}`;
+                    const storageRef = ref(storage, `games/${fileName}`);
+                    
+                    // Upload ke firebase storage
+                    const snapshot = await uploadBytes(storageRef, file);
+                    // Dapatkan URL publik dari gambar tersebut
+                    imageUrl = await getDownloadURL(storageRef);
+                }
+
+                if (!imageUrl && !id) {
+                    alert("Mohon upload gambar game terlebih dahulu!");
+                    throw new Error("No image selected for new game");
+                }
+
+                // Proses Simpan ke Firestore
+                if (id) {
+                    // Mode UPDATE
+                    const gameRef = doc(db, "games", id);
+                    await updateDoc(gameRef, {
+                        name: name,
+                        category: category,
+                        imageUrl: imageUrl // Kalau ganti gambar bakal keupdate, kalau ngga pakai url lama
+                    });
+                } else {
+                    // Mode CREATE (Tambah)
+                    await addDoc(collection(db, "games"), {
+                        name: name,
+                        category: category,
+                        imageUrl: imageUrl,
+                        createdAt: serverTimestamp()
+                    });
+                }
+                
+                closeModal();
+            } catch (error) {
+                console.error("Error saving game: ", error);
+                alert("Gagal menyimpan game: " + error.message);
+            } finally {
+                btnSave.disabled = false;
+                btnSave.innerText = 'Simpan';
+            }
+        });
+
+        // ==========================================
+        // 4. DELETE: Menghapus Data
+        // ==========================================
+        window.deleteGame = async (id) => {
+            if (confirm("Apakah kamu yakin ingin menghapus game ini?")) {
+                try {
+                    await deleteDoc(doc(db, "games", id));
+                    // Berdasarkan instruksi: gambar di Storage tidak perlu dihapus, 
+                    // cukup hapus dokumen di Firestore saja.
+                } catch (error) {
+                    console.error("Error hapus game: ", error);
+                    alert("Gagal menghapus game.");
+                }
+            }
+        };
+
+        // ==========================================
+        // 5. MODAL UI LOGIC & IMAGE PREVIEW
+        // ==========================================
+        window.openModal = () => {
+            document.getElementById('modalTitle').innerText = "Tambah Game";
+            document.getElementById('gameId').value = "";
+            document.getElementById('existingImageUrl').value = "";
+            gameForm.reset();
+            imagePreview.style.display = 'none';
+            imagePreview.src = '';
+            
+            // Required untuk gambar di kondisi tambah
+            imageInput.setAttribute('required', 'required'); 
+            
+            modal.style.display = 'flex';
+        };
+
+        window.closeModal = () => {
+            modal.style.display = 'none';
+        };
+
+        window.editGame = (id) => {
+            // Cari data game dari array global
+            const game = gamesData.find(g => g.id === id);
+            if (!game) return;
+
+            document.getElementById('modalTitle').innerText = "Edit Game";
+            document.getElementById('gameId').value = game.id;
+            document.getElementById('existingImageUrl').value = game.imageUrl;
+            
+            document.getElementById('gameName').value = game.name;
+            document.getElementById('gameCategory').value = game.category;
+            
+            // Gambar tidak wajib diisi ulang saat edit
+            imageInput.removeAttribute('required'); 
+            
+            // Tampilkan preview gambar lama
+            imagePreview.src = game.imageUrl;
+            imagePreview.style.display = 'block';
+
+            modal.style.display = 'flex';
+        };
+
+        // Fitur Instant Preview untuk Input Gambar
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                // Membuat URL sementara di browser untuk preview lokal
+                imagePreview.src = URL.createObjectURL(file);
+                imagePreview.style.display = 'block';
+            }
+        });
+
+    </script>
+</body>
+</html>
+
