@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Kontak & Footer - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6C3FC4;
+            --primary-hover: #56329e;
+            --bg-color: #f4f6f9;
+            --sidebar-bg: #2c3e50;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --success-color: #198754;
+            --success-bg: #d1e7dd;
+            --danger-color: #dc3545;
+            --danger-bg: #f8d7da;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #authLoading {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: white; z-index: 9999;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #eee; border-top-color: var(--primary-color);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .sidebar {
+            width: 260px; background: var(--sidebar-bg); color: white;
+            display: flex; flex-direction: column; transition: transform 0.3s ease;
+            position: fixed; height: 100vh; z-index: 1000;
+        }
+        .sidebar-header { padding: 20px; text-align: center; font-size: 1.5rem; font-weight: 700; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-menu { list-style: none; flex-grow: 1; padding-top: 20px; overflow-y: auto; }
+        .sidebar-menu li a { display: block; padding: 15px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; font-weight: 500; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: var(--primary-color); color: white; border-left: 4px solid white; }
+
+        .main-content {
+            flex-grow: 1; margin-left: 260px; display: flex; flex-direction: column;
+            min-height: 100vh; transition: margin-left 0.3s ease; width: calc(100% - 260px);
+        }
+
+        .header {
+            background: var(--card-bg); padding: 15px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 900;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .menu-toggle { display: none; font-size: 1.5rem; background: none; border: none; cursor: pointer; color: var(--text-color); }
+        .header-title { font-size: 1.2rem; font-weight: 600; }
+
+        .content-body { padding: 30px; flex-grow: 1; max-width: 800px; width: 100%; margin: 0 auto; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.95rem; }
+        .form-control {
+            width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px;
+            font-family: inherit; font-size: 0.95rem; transition: border-color 0.3s;
+        }
+        .form-control:focus { outline: none; border-color: var(--primary-color); }
+        textarea.form-control { min-height: 100px; resize: vertical; }
+
+        .btn-submit {
+            background: var(--primary-color); color: white; border: none; padding: 14px 25px;
+            border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.3s;
+            width: 100%; margin-top: 10px;
+        }
+        .btn-submit:hover { background: var(--primary-hover); }
+        .btn-submit:disabled { background: #a38cd1; cursor: not-allowed; }
+
+        .alert {
+            padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; display: none; text-align: center;
+        }
+        .alert-success { background: var(--success-bg); color: var(--success-color); border: 1px solid #badbcc; }
+        .alert-danger { background: var(--danger-bg); color: var(--danger-color); border: 1px solid #f5c2c7; }
+
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+
+        @media (max-width: 991px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; }
+            .menu-toggle { display: block; }
+            .sidebar-overlay.show { display: block; }
+            .content-body { padding: 15px; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authLoading">
+        <div class="spinner"></div>
+        <p style="color: #666; font-weight: 500;">Memeriksa akses...</p>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">Admin Panel</div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="games.html">Kelola Games</a></li>
+            <li><a href="products.html">Kelola Produk</a></li>
+            <li><a href="settings.html">Konfigurasi Website</a></li>
+            <li><a href="whatsapp.html">Konfigurasi WhatsApp</a></li>
+            <li><a href="payment-image.html">Gambar Pembayaran</a></li>
+            <li><a href="contact-edit.html" class="active">Edit Kontak</a></li>
+            <li><a href="manage-admin.html">Kelola Admin</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">&#9776;</button>
+                <div class="header-title">Edit Kontak & Footer</div>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="card">
+                <div id="successAlert" class="alert alert-success">Perubahan berhasil disimpan!</div>
+                <div id="errorAlert" class="alert alert-danger"></div>
+                
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label class="form-label" for="whatsappNumber">Nomor WhatsApp</label>
+                        <input type="text" id="whatsappNumber" class="form-control" placeholder="Contoh: 6281234567890">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="whatsappText">Teks Tombol WhatsApp</label>
+                        <input type="text" id="whatsappText" class="form-control" placeholder="Contoh: Chat via WhatsApp">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Bisnis</label>
+                        <input type="email" id="email" class="form-control" placeholder="Contoh: admin@store.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="address">Alamat Lengkap</label>
+                        <textarea id="address" class="form-control" placeholder="Contoh: Jl. Sudirman No. 123, Jakarta"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="openHours">Jam Operasional</label>
+                        <input type="text" id="openHours" class="form-control" placeholder="Contoh: Senin - Minggu, 08.00 - 22.00 WIB">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">Deskripsi Bisnis (Untuk Footer)</label>
+                        <textarea id="description" class="form-control" placeholder="Contoh: Pusat Top Up Game Termurah dan Terpercaya"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="footerText">Teks Copyright Footer</label>
+                        <input type="text" id="footerText" class="form-control" placeholder="Contoh: © 2024 Naufal Gaming Studio">
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btnSave">Simpan Perubahan</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/firebase-config.js"></script>
+    
+    <script type="module">
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        const auth = getAuth();
+        const db = getFirestore();
+
+        const form = document.getElementById('contactForm');
+        const btnSave = document.getElementById('btnSave');
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+
+        const fields = [
+            { id: 'whatsappNumber', name: 'Nomor WhatsApp' },
+            { id: 'whatsappText', name: 'Teks Tombol WhatsApp' },
+            { id: 'email', name: 'Email Bisnis' },
+            { id: 'address', name: 'Alamat Lengkap' },
+            { id: 'openHours', name: 'Jam Operasional' },
+            { id: 'description', name: 'Deskripsi Bisnis' },
+            { id: 'footerText', name: 'Teks Copyright Footer' }
+        ];
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('authLoading').style.display = 'none';
+                loadContactData();
+            } else {
+                window.location.replace('login.html');
+            }
+        });
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            sidebar.classList.add('show'); sidebarOverlay.classList.add('show');
+        });
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('show'); sidebarOverlay.classList.remove('show');
+        });
+
+        async function loadContactData() {
+            try {
+                const docRef = doc(db, "contact", "info");
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    fields.forEach(field => {
+                        document.getElementById(field.id).value = data[field.id] || '';
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading contact data:", error);
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            successAlert.style.display = 'none';
+            errorAlert.style.display = 'none';
+
+            let hasError = false;
+            let firstEmptyField = '';
+
+            const contactData = {};
+
+            for (let i = 0; i < fields.length; i++) {
+                const inputElement = document.getElementById(fields[i].id);
+                const value = inputElement.value.trim();
+                
+                if (!value) {
+                    hasError = true;
+                    firstEmptyField = fields[i].name;
+                    break;
+                }
+                contactData[fields[i].id] = value;
+            }
+
+            if (hasError) {
+                errorAlert.innerText = `Field "${firstEmptyField}" tidak boleh kosong!`;
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            btnSave.disabled = true;
+            btnSave.innerText = 'Menyimpan...';
+
+            try {
+                await setDoc(doc(db, "contact", "info"), contactData, { merge: true });
+                successAlert.style.display = 'block';
+                setTimeout(() => { successAlert.style.display = 'none'; }, 5000);
+            } catch (error) {
+                console.error("Error saving contact data:", error);
+                errorAlert.innerText = "Terjadi kesalahan saat menyimpan perubahan.";
+                errorAlert.style.display = 'block';
+            } finally {
+                btnSave.disabled = false;
+                btnSave.innerText = 'Simpan Perubahan';
+            }
+        });
+    </script>
+</body>
+</html>
+
