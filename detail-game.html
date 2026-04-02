@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Game - Loading...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6C3FC4;
+            --primary-hover: #56329e;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --card-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Navbar */
+        nav {
+            background: var(--card-bg);
+            padding: 1rem 5%;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 600;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 5%;
+        }
+
+        /* Loading & Error State */
+        .state-message {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .error-message {
+            color: #dc3545;
+        }
+
+        /* Game Header Section */
+        .game-header {
+            display: flex;
+            flex-direction: column;
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .game-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .game-info {
+            padding: 1.5rem;
+        }
+
+        .game-title {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .game-category {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+
+        /* Products Section */
+        .section-title {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 kolom di mobile */
+            gap: 15px;
+        }
+
+        /* Breakpoint untuk Desktop */
+        @media (min-width: 768px) {
+            .game-header {
+                flex-direction: row;
+            }
+            .game-image {
+                width: 300px;
+                height: auto;
+            }
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr); /* 3 kolom di desktop */
+                gap: 20px;
+            }
+        }
+
+        /* Product Card */
+        .product-card {
+            background: var(--card-bg);
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border-color: var(--primary-color);
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .product-desc {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .product-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .btn-buy {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+            font-family: inherit;
+        }
+
+        .btn-buy:hover {
+            background: var(--primary-hover);
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="back-btn">&#8592;</a>
+        <div class="logo" id="siteLogo">Store Game</div>
+    </nav>
+
+    <div class="container">
+        <div id="loadingState" class="state-message">Memuat detail game...</div>
+        <div id="errorState" class="state-message error-message" style="display: none;"></div>
+
+        <div id="mainContent" style="display: none;">
+            
+            <div class="game-header">
+                <img id="gameImage" class="game-image" src="" alt="Gambar Game">
+                <div class="game-info">
+                    <h1 id="gameTitle" class="game-title">-</h1>
+                    <span id="gameCategory" class="game-category">-</span>
+                </div>
+            </div>
+
+            <h2 class="section-title">Pilih Nominal Top Up</h2>
+            <div id="productGrid" class="product-grid">
+                </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 <span id="footerSiteName">GameStore</span>. All Rights Reserved.</p>
+    </footer>
+
+    <script src="js/firebase-config.js"></script>
+    
+    <script type="module">
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        // Inisialisasi Firestore
+        const db = getFirestore();
+
+        // Mengambil ID Game dari Parameter URL (contoh: ?id=abcde12345)
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameId = urlParams.get('id');
+
+        // Referensi Elemen UI
+        const loadingState = document.getElementById('loadingState');
+        const errorState = document.getElementById('errorState');
+        const mainContent = document.getElementById('mainContent');
+        const productGrid = document.getElementById('productGrid');
+
+        // Variabel untuk menyimpan data game dan konfigurasi WhatsApp
+        let gameData = null;
+        let waConfig = null;
+
+        // Fungsi pembantu: Format angka menjadi Rupiah
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        };
+
+        // Fungsi pembantu: Tampilkan pesan error
+        const showError = (message) => {
+            loadingState.style.display = 'none';
+            errorState.style.display = 'block';
+            errorState.innerText = message;
+        };
+
+        // Fungsi untuk mengeksekusi proses checkout via WhatsApp
+        window.checkoutWhatsApp = (productName, productPrice) => {
+            if (!waConfig || !waConfig.phoneNumber || !waConfig.messageTemplate) {
+                alert("Sistem WhatsApp belum dikonfigurasi.");
+                return;
+            }
+
+            const formattedPrice = formatRupiah(productPrice);
+            
+            // Ganti placeholder di template pesan dengan data yang asli
+            let message = waConfig.messageTemplate;
+            message = message.replace(/{game}/g, gameData.name);
+            message = message.replace(/{product}/g, productName);
+            message = message.replace(/{price}/g, formattedPrice);
+
+            // Bersihkan nomor telepon (buang karakter selain angka jika ada)
+            let phone = waConfig.phoneNumber.replace(/\D/g, '');
+            // Pastikan menggunakan format internasional untuk API WhatsApp (ubah 0 jadi 62 jika berawalan 0)
+            if (phone.startsWith('0')) {
+                phone = '62' + phone.substring(1);
+            }
+
+            // Encode pesan agar aman dikirim lewat URL
+            const encodedMessage = encodeURIComponent(message);
+            const waUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+            
+            // Buka WhatsApp di tab/aplikasi baru
+            window.open(waUrl, '_blank');
+        };
+
+        // Fungsi Utama untuk Mengambil Data
+        async function fetchDetailData() {
+            if (!gameId) {
+                showError("ID Game tidak ditemukan di URL.");
+                return;
+            }
+
+            try {
+                // 1. Ambil Nama Website (Pengaturan Global)
+                const siteRef = doc(db, "settings", "site");
+                const siteSnap = await getDoc(siteRef);
+                if (siteSnap.exists()) {
+                    const name = siteSnap.data().siteName;
+                    document.getElementById('siteLogo').innerText = name;
+                    document.getElementById('footerSiteName').innerText = name;
+                }
+
+                // 2. Ambil Konfigurasi WhatsApp
+                const waRef = doc(db, "whatsapp", "config");
+                const waSnap = await getDoc(waRef);
+                if (waSnap.exists()) {
+                    waConfig = waSnap.data();
+                } else {
+                    console.warn("Konfigurasi WhatsApp tidak ditemukan di Firestore.");
+                }
+
+                // 3. Ambil Detail Game
+                const gameRef = doc(db, "games", gameId);
+                const gameSnap = await getDoc(gameRef);
+                
+                if (!gameSnap.exists()) {
+                    showError("Game tidak ditemukan di database.");
+                    return;
+                }
+                
+                gameData = gameSnap.data();
+                document.title = `${gameData.name} - Top Up`;
+                document.getElementById('gameImage').src = gameData.imageUrl;
+                document.getElementById('gameImage').alt = gameData.name;
+                document.getElementById('gameTitle').innerText = gameData.name;
+                document.getElementById('gameCategory').innerText = gameData.category;
+
+                // 4. Ambil List Produk untuk Game ini
+                const productsRef = collection(db, "products");
+                const q = query(productsRef, where("gameId", "==", gameId));
+                const productsSnap = await getDocs(q);
+
+                let productsHtml = '';
+                
+                if (productsSnap.empty) {
+                    productsHtml = '<p style="grid-column: 1/-1; text-align: center; color: #666;">Belum ada produk untuk game ini.</p>';
+                } else {
+                    // Looping data produk dan buat card HTML-nya
+                    productsSnap.forEach((doc) => {
+                        const product = doc.data();
+                        productsHtml += `
+                            <div class="product-card">
+                                <div class="product-name">${product.name}</div>
+                                <div class="product-desc">${product.description || ''}</div>
+                                <div class="product-price">${formatRupiah(product.price)}</div>
+                                <button class="btn-buy" onclick="checkoutWhatsApp('${product.name}', ${product.price})">Beli Sekarang</button>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Masukkan HTML produk ke dalam grid
+                productGrid.innerHTML = productsHtml;
+
+                // Matikan loading state dan tampilkan konten utama
+                loadingState.style.display = 'none';
+                mainContent.style.display = 'block';
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                showError("Terjadi kesalahan saat memuat data. Silakan coba lagi nanti.");
+            }
+        }
+
+        // Jalankan fungsi saat script berhasil dimuat
+        fetchDetailData();
+    </script>
+</body>
+</html>
