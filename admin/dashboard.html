@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Panel Kendali</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6C3FC4;
+            --primary-hover: #56329e;
+            --bg-color: #f4f6f9;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --text-color: #333;
+            --card-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen Pengecekan Akses */
+        #authLoading {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: white;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #eee;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            flex-grow: 1;
+            padding-top: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li a {
+            display: block;
+            padding: 15px 25px;
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 500;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: var(--primary-color);
+            color: white;
+            border-left: 4px solid white;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            margin-left: 260px; /* Lebar sidebar */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+            width: calc(100% - 260px);
+        }
+
+        /* Top Header */
+        .header {
+            background: var(--card-bg);
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .admin-email {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+        }
+
+        /* Dashboard Content */
+        .content-body {
+            padding: 30px;
+            flex-grow: 1;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-right: 20px;
+            color: var(--primary-color);
+            background: rgba(108, 63, 196, 0.1);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .stat-info h3 {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: 500;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .stat-info .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        /* Mobile Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        /* Responsive Design Mobile */
+        @media (max-width: 991px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .sidebar-overlay.show {
+                display: block;
+            }
+            .admin-email {
+                display: none; /* Sembunyikan email di layar HP agar rapi */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authLoading">
+        <div class="spinner"></div>
+        <p style="color: #666; font-weight: 500;">Memeriksa akses...</p>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            Admin Panel
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html" class="active">Dashboard</a></li>
+            <li><a href="games.html">Kelola Games</a></li>
+            <li><a href="products.html">Kelola Produk</a></li>
+            <li><a href="settings.html">Konfigurasi Website</a></li>
+            <li><a href="whatsapp.html">Konfigurasi WhatsApp</a></li>
+            <li><a href="payment-image.html">Gambar Pembayaran</a></li>
+            <li><a href="contact-edit.html">Edit Kontak</a></li>
+            <li><a href="manage-admin.html">Kelola Admin</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">&#9776;</button>
+                <div class="header-title">Dashboard Admin</div>
+            </div>
+            <div class="header-right">
+                <span class="admin-email" id="displayEmail">admin@loading...</span>
+                <button class="btn-logout" id="btnLogout">Logout</button>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-info">
+                        <h3>Total Game</h3>
+                        <div class="stat-number" id="countGames">-</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">💎</div>
+                    <div class="stat-info">
+                        <h3>Total Produk</h3>
+                        <div class="stat-number" id="countProducts">-</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">💳</div>
+                    <div class="stat-info">
+                        <h3>Metode Bayar</h3>
+                        <div class="stat-number" id="countPayments">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/firebase-config.js"></script>
+    
+    <script type="module">
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        import { getFirestore, collection, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        // Inisialisasi
+        const auth = getAuth();
+        const db = getFirestore();
+
+        // Referensi UI Mobile Menu
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        // Toggle Sidebar Mobile
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.add('show');
+            sidebarOverlay.classList.add('show');
+        });
+
+        // Tutup Sidebar jika overlay diklik
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+        });
+
+        // ==========================================
+        // 1. SISTEM PROTEKSI HALAMAN (AUTH)
+        // ==========================================
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Jika sudah login:
+                // a. Tampilkan emailnya di pojok kanan atas
+                document.getElementById('displayEmail').innerText = user.email;
+                // b. Sembunyikan layar loading putih
+                document.getElementById('authLoading').style.display = 'none';
+                
+                // c. Mulai ambil data statistik
+                fetchDashboardStats();
+            } else {
+                // Jika belum login / tidak ada session aktif, langsung tendang ke login
+                window.location.replace('login.html');
+            }
+        });
+
+        // ==========================================
+        // 2. FUNGSI LOGOUT
+        // ==========================================
+        document.getElementById('btnLogout').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                // Setelah signout berhasil, onAuthStateChanged otomatis akan menendang user ke login.html
+            } catch (error) {
+                console.error("Gagal logout:", error);
+                alert("Terjadi kesalahan saat logout.");
+            }
+        });
+
+        // ==========================================
+        // 3. FUNGSI AMBIL DATA STATISTIK FIRESTORE
+        // ==========================================
+        async function fetchDashboardStats() {
+            try {
+                // Gunakan getCountFromServer untuk menghitung jumlah dokumen tanpa mengambil semua datanya.
+                // Ini lebih cepat dan menghemat kuota pembacaan Firestore!
+
+                // Hitung Game
+                const gamesColl = collection(db, 'games');
+                const gamesSnapshot = await getCountFromServer(gamesColl);
+                document.getElementById('countGames').innerText = gamesSnapshot.data().count;
+
+                // Hitung Produk
+                const productsColl = collection(db, 'products');
+                const productsSnapshot = await getCountFromServer(productsColl);
+                document.getElementById('countProducts').innerText = productsSnapshot.data().count;
+
+                // Hitung Gambar Pembayaran
+                const paymentsColl = collection(db, 'payment_images');
+                const paymentsSnapshot = await getCountFromServer(paymentsColl);
+                document.getElementById('countPayments').innerText = paymentsSnapshot.data().count;
+
+            } catch (error) {
+                console.error("Gagal memuat statistik:", error);
+                document.getElementById('countGames').innerText = "Error";
+                document.getElementById('countProducts').innerText = "Error";
+                document.getElementById('countPayments').innerText = "Error";
+            }
+        }
+    </script>
+</body>
+</html>
